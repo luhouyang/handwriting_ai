@@ -14,8 +14,10 @@ t=turtle
 
 
 def main():
-    # model = keras.models.load_model('handwriting_model')
-    model = keras.models.load_model('handwriting_model_long')
+    # model = keras.models.load_model('handwriting_model') # up to 75%
+    # model = keras.models.load_model('handwriting_model_long') # up to 80%
+    model = keras.models.load_model('handwriting_model_omega') # up to 90%
+    # model = keras.models.load_model('handwriting_model_supalong') # broken model
     handwriting_model = ExportModel(model)
 
     t.title("PyBoard")

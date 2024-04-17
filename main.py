@@ -34,7 +34,7 @@ np.random.seed(SEED)
 DATASET_PATH = 'D:\\training_data\\handwriting\\data\\by_class'
 LABELS = []
 
-EPOCH = 25
+EPOCH = 3
 
 def main():
     #
@@ -56,18 +56,18 @@ def main():
 
     print(LABELS)
 
-    train_ds, _ = tf.keras.utils.image_dataset_from_directory(
+    train_ds, val_ds = tf.keras.utils.image_dataset_from_directory(
         directory=data_dir,
         batch_size=32,
         color_mode='grayscale',
         image_size=(128, 128),
         seed=0,
-        validation_split=0.4,
+        validation_split=0.3,
         subset='both'
     )
 
-    train_ds = train_ds.shard(num_shards=2, index=0)
-    val_ds = train_ds.shard(num_shards=2, index=1)
+    # train_ds = train_ds.shard(num_shards=2, index=0)
+    # val_ds = train_ds.shard(num_shards=2, index=1)
 
     print(train_ds.element_spec)
 
@@ -94,9 +94,13 @@ def main():
     #     plt.title(LABELS[exp_label[i]])
     # plt.show()
 
-    train_ds = train_ds.cache().shuffle(10000).prefetch(tf.data.AUTOTUNE)
-    val_ds = val_ds.cache().prefetch(tf.data.AUTOTUNE)
-    test_ds = test_ds.cache().prefetch(tf.data.AUTOTUNE)
+    # train_ds = train_ds.cache().shuffle(100000).prefetch(tf.data.AUTOTUNE)
+    # val_ds = val_ds.cache().prefetch(tf.data.AUTOTUNE)
+    # test_ds = test_ds.cache().prefetch(tf.data.AUTOTUNE)
+    train_ds = train_ds.shuffle(100000).prefetch(tf.data.AUTOTUNE)
+
+    val_ds = val_ds.prefetch(tf.data.AUTOTUNE)
+    test_ds = test_ds.prefetch(tf.data.AUTOTUNE)
 
     input_shape = exp_data.shape[1:]
     # print("\nINPUT SHAPE: ", input_shape)
@@ -117,7 +121,9 @@ def main():
         layers.Conv2D(128, 3, activation='relu'),
         layers.Flatten(),
         layers.Dense(128, activation='relu'),
+        layers.Dropout(0.25),
         layers.Dense(64, activation='relu'),
+        layers.Dropout(0.25),
         layers.Dense(num_labels),
     ])
 
@@ -142,7 +148,8 @@ def main():
     #
     # save model
     #
-    # model.save('handwriting_model_long')
+    # model.save('handwriting_model', save_format='tf')
+    model.save('handwriting_model_omega')
 
     model.evaluate(test_ds, return_dict=True)
 
