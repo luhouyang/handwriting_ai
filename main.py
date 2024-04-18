@@ -7,6 +7,7 @@ import pathlib
 import shutil
 import pickle
 import matplotlib.pyplot as plt
+import seaborn as sns
 
 from IPython.display import clear_output
 from PIL import Image
@@ -194,6 +195,45 @@ def rename_and_move_file():
                     shutil.move(NEW_FILE_PATH, DST_PATH)
                     print(DST_PATH)
 
+
+def confusion():
+    values = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H',
+            'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 
+            'Z', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 
+            'q', 'r', 's', 't', 'u', 'v', 'w', 'x','y', 'z']
+    data_dir = pathlib.Path(DATASET_PATH)
+
+    LABELS = np.array(tf.io.gfile.listdir(str(data_dir)))
+
+    train_ds, val_ds = tf.keras.utils.image_dataset_from_directory(
+        directory=data_dir,
+        batch_size=32,
+        color_mode='grayscale',
+        image_size=(128, 128),
+        seed=0,
+        validation_split=0.3,
+        subset='both'
+    )
+
+    model = tf.keras.models.load_model('handwriting_model_omega')
+    # confusion matrix
+    y_pred = model.predict(val_ds)
+    y_pred = tf.argmax(y_pred, axis=1)
+    y_true = tf.concat(list(val_ds.map(lambda data, label: label)), axis=0)
+
+    confusion_mtx = tf.math.confusion_matrix(y_true, y_pred)
+    plt.figure(figsize=(20, 20))
+    plt.autoscale(tight=True)
+    sns.heatmap(confusion_mtx,
+                xticklabels=values,
+                yticklabels=values,
+                annot=True, fmt='g')
+    plt.xlabel('Prediction')
+    plt.ylabel('Label')
+
+    plt.show()
+
+
 # export model
 class ExportModel(tf.Module):
     def __init__(self, model):
@@ -313,6 +353,7 @@ class GPUMonitor(Thread):
 if __name__ == '__main__':
     gpumonitor = GPUMonitor(GPUDELAY)
     training_plot = TrainingPlot()
-    main()
+    # main()
+    confusion()
 
 # %%

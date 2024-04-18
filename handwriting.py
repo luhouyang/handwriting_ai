@@ -136,7 +136,7 @@ def main():
         plt.title(handwriting_model.values[index])
 
         plt.subplot(1, 2, 2)
-        np_data = np.asarray(image)
+        np_data = np.asarray(Image.open(DATA_DIR))
         plt.imshow(np_data)
         plt.title(handwriting_model.values[index])
 
@@ -161,9 +161,15 @@ def main():
 
         result = ocr_export_model.pred(DATA_DIR)
         print(result)
+
+        plt.figure(figsize=(8, 8))
+        np_data = np.asarray(Image.open(DATA_DIR))
+        plt.imshow(np_data)
+        plt.title(result[0])
+
+        plt.show()
         
     # start
-    t.onkey(colr,"C")
     t.onkeypress(undo,"u")
     t.onkey(backtopen,"p")
     t.onkey(clear,"c")
