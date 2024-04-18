@@ -121,7 +121,6 @@ def main():
         x = tf.io.read_file(str(data_dir))
         x = tf.image.decode_image(x)
         x = tf.image.rgb_to_grayscale(x)
-        image = x
         x = x[tf.newaxis, ...]
         print(x.shape)
 
@@ -168,6 +167,85 @@ def main():
         plt.title(result[0])
 
         plt.show()
+
+    def both():
+        # get image and convert to png
+        DATA_DIR_1 = 'img.png'
+
+        # get image and convert to png
+        DATA_DIR_2 = 'img_ocr.png'
+
+        canvas = t.getscreen().getcanvas()
+        canvas.postscript(file="foo.ps")
+        psimage = Image.open("foo.ps")
+        psimage = psimage.resize((100, 100), resample=Image.NEAREST)
+        psimage.save(DATA_DIR_1)
+        psimage.save(DATA_DIR_2)
+        psimage.close()
+        os.remove("foo.ps")
+
+        # crop image
+        pngimage = Image.open(DATA_DIR_1)
+        ori = pngimage  # set image to original
+        pngimage = trim(pngimage)   # trim away padding white pixels
+        tw, th = pngimage.size
+        # image wanted 64x64
+        # if th=64, then 192-64 = 128 (no cropping occurs)
+        # if th=65, then 192-65 = 127 (reduce original by 1)
+        # if th=63, then 192-63 = 129 (increase original by 1)
+        # resize with height only, awoid stretching
+        pngimage = ori.resize((192-th, 192-th), resample=Image.NEAREST) 
+        pngimage = trim(pngimage) # trim to get 64x64 image
+
+        # create new image with dimension [128, 128, 1]
+        blank_img = Image.new(mode="RGB", size=(128, 128), color=(255, 255, 255))
+
+        # place image in center
+        iw, ih = pngimage.size
+        blank_img.paste(pngimage, (round(64-iw/2), round(64-ih/2)))
+
+        # save file and close
+        blank_img.save(DATA_DIR_1)
+        pngimage.close()
+        blank_img.close()
+
+        data_dir = pathlib.Path(DATA_DIR_1)
+        x = tf.io.read_file(str(data_dir))
+        x = tf.image.decode_image(x)
+        x = tf.image.rgb_to_grayscale(x)
+        x = x[tf.newaxis, ...]
+        print(x.shape)
+
+        result = handwriting_model(x)
+        index = tf.argmax(result[0]).numpy()
+        print("Prediction: ", handwriting_model.classes[index], " || ", handwriting_model.values[index])
+
+        # crop image
+        pngimage2 = Image.open(DATA_DIR_2)
+        pngimage2 = trim(pngimage2)   # trim away padding white pixels
+        pngimage2.save(DATA_DIR_2)
+        pngimage2.close()
+
+        result2 = ocr_export_model.pred(DATA_DIR_2)
+        print(result2)
+
+        plt.figure(figsize=(24, 8))
+        plt.subplot(1, 3, 1)
+        plt.bar(handwriting_model.values, tf.nn.softmax(result[0]))
+        plt.title(handwriting_model.values[index])
+
+        plt.subplot(1, 3, 2)
+        np_data = np.asarray(Image.open(DATA_DIR_1))
+        plt.imshow(np_data)
+        plt.title(handwriting_model.values[index])
+
+        plt.subplot(1, 3, 3)
+        np_data2 = np.asarray(Image.open(DATA_DIR_2))
+        plt.imshow(np_data2)
+        plt.title(result2[0])
+
+        plt.show()
+
         
     # start
     t.onkeypress(undo,"u")
@@ -176,6 +254,7 @@ def main():
     t.onkey(erase,"e")
     t.onkey(save_own, "S")
     t.onkey(save_ocr, "O")
+    t.onkey(both, "B")
     t.listen()
     t.mainloop()
 
