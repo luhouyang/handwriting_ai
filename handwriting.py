@@ -7,6 +7,7 @@ import turtle
 
 from tensorflow import keras
 from main import ExportModel
+from ocr_train import ExportOCRModel
 from PIL import Image, ImageChops
 
 
@@ -19,6 +20,9 @@ def main():
     model = keras.models.load_model('handwriting_model_omega') # up to 90%
     # model = keras.models.load_model('handwriting_model_supalong') # broken model
     handwriting_model = ExportModel(model)
+
+    ocr_model = keras.models.load_model('OCR_model')
+    ocr_export_model = ExportOCRModel(ocr_model)
 
     t.title("PyBoard")
     t.setup(1000, 1000)
@@ -76,14 +80,14 @@ def main():
         t.undo()
 
     # save image
-    def save():
-            # get image and convert to png
+    def save_own():
+        # get image and convert to png
         DATA_DIR = 'img.png'
 
         canvas = t.getscreen().getcanvas()
         canvas.postscript(file="foo.ps")
         psimage = Image.open("foo.ps")
-        psimage = psimage.resize((128, 128), resample=Image.NEAREST)
+        psimage = psimage.resize((100, 100), resample=Image.NEAREST)
         psimage.save(DATA_DIR)
         psimage.close()
         os.remove("foo.ps")
@@ -138,13 +142,34 @@ def main():
 
         plt.show()
 
+    def save_ocr():
+        # get image and convert to png
+        DATA_DIR = 'img_ocr.png'
+
+        canvas = t.getscreen().getcanvas()
+        canvas.postscript(file="foo.ps")
+        psimage = Image.open("foo.ps")
+        psimage.save(DATA_DIR)
+        psimage.close()
+        os.remove("foo.ps")
+
+        # crop image
+        pngimage = Image.open(DATA_DIR)
+        pngimage = trim(pngimage)   # trim away padding white pixels
+        pngimage.save(DATA_DIR)
+        pngimage.close()
+
+        result = ocr_export_model.pred(DATA_DIR)
+        print(result)
+        
     # start
     t.onkey(colr,"C")
     t.onkeypress(undo,"u")
     t.onkey(backtopen,"p")
     t.onkey(clear,"c")
     t.onkey(erase,"e")
-    t.onkey(save, "S")
+    t.onkey(save_own, "S")
+    t.onkey(save_ocr, "O")
     t.listen()
     t.mainloop()
 
