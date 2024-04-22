@@ -35,7 +35,7 @@ np.random.seed(SEED)
 DATASET_PATH = 'D:\\training_data\\handwriting\\data\\by_class'
 LABELS = []
 
-EPOCH = 3
+EPOCH = 5
 
 def main():
     #
@@ -95,13 +95,13 @@ def main():
     #     plt.title(LABELS[exp_label[i]])
     # plt.show()
 
-    # train_ds = train_ds.cache().shuffle(100000).prefetch(tf.data.AUTOTUNE)
+    # train_ds = train_ds.cache().shuffle(10000).prefetch(tf.data.AUTOTUNE)
     # val_ds = val_ds.cache().prefetch(tf.data.AUTOTUNE)
     # test_ds = test_ds.cache().prefetch(tf.data.AUTOTUNE)
-    train_ds = train_ds.shuffle(100000).prefetch(tf.data.AUTOTUNE)
+    train_ds = train_ds.shuffle(10000)
 
-    val_ds = val_ds.prefetch(tf.data.AUTOTUNE)
-    test_ds = test_ds.prefetch(tf.data.AUTOTUNE)
+    val_ds = val_ds
+    test_ds = test_ds
 
     input_shape = exp_data.shape[1:]
     # print("\nINPUT SHAPE: ", input_shape)
@@ -150,7 +150,7 @@ def main():
     # save model
     #
     # model.save('handwriting_model', save_format='tf')
-    model.save('handwriting_model_omega')
+    model.save('handwriting_model_normalized')
 
     model.evaluate(test_ds, return_dict=True)
 
@@ -353,7 +353,7 @@ class GPUMonitor(Thread):
 if __name__ == '__main__':
     gpumonitor = GPUMonitor(GPUDELAY)
     training_plot = TrainingPlot()
-    # main()
-    confusion()
+    main()
+    # confusion()
 
 # %%
